@@ -1,0 +1,62 @@
+.tile {
+    display: flex;
+    width: 16px;
+    height: 16px;
+    background: url('assets/minesweepersprite.png') no-repeat;
+}
+
+.tile.revealed-0 {
+    background-position: 0 0;
+}
+
+.tile.revealed-1 {
+    background-position: -16px 0;
+}
+
+.tile.revealed-2 {
+    background-position: -32px 0;
+}
+
+.tile.revealed-3 {
+    background-position: -48px 0;
+}
+
+.tile.revealed-4 {
+    background-position: -64px 0;
+}
+
+.tile.revealed-5 {
+    background-position: -80px 0;
+}
+
+.tile.revealed-6 {
+    background-position: -96px 0;
+}
+
+.tile.revealed-7 {
+    background-position: -112px 0;
+}
+
+.tile.bomb {
+    background-position: 0 -16px;
+}
+
+.tile.bomb_x {
+    background-position: -16px -16px;
+}
+
+.tile.detonated {
+    background-position: -32px -16px;
+}
+
+.tile.question_mark {
+    background-position: -48px -16px;
+}
+
+.tile.flagged {
+    background-position: -64px -16px;
+}
+
+.tile.hidden {
+    background-position: -80px -16px;
+}
