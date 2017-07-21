@@ -47,6 +47,7 @@ class App extends React.Component {
         this.iterateAdjacentBombCounts(tiles);
 
         this.state = {
+            bombsRemaining: this.getBoardSetup().totalBombs,
             secondsElapsed: 0,
             faceFrame: this.faceFrames.SMILE,
             tiles
@@ -60,13 +61,21 @@ class App extends React.Component {
         }
         this.startTimer();
         const tiles = this.revealTiles(index, this.state.tiles.slice());
+        let { bombsRemaining } = this.state;
+        let faceFrame = this.faceFrames.SMILE;
         if (this.checkForWin(tiles)) {
             console.log("winner");
             this.gameover = true;
             this.stopTimer();
             this.flagRemainingBombs(tiles);
+            bombsRemaining = 0;
+            faceFrame = this.faceFrames.SHADES;
         }
-        this.setState({tiles});
+        this.setState({
+            bombsRemaining,
+            faceFrame,
+            tiles
+        });
     }
 
     onRightClick(index) {
@@ -76,7 +85,18 @@ class App extends React.Component {
         }
         console.log(this.state)
         const tiles = this.markTile(index, this.state.tiles.slice());
-        this.setState({tiles});
+
+        let { bombsRemaining } = this.state;
+        if (tiles[index].tileFrame === this.tileFrames.FLAGGED) {
+            bombsRemaining--;
+        } else {
+            bombsRemaining++;
+        }
+
+        this.setState({
+            bombsRemaining,
+            tiles
+        });
     }
 
     updateTimer() {
@@ -122,8 +142,7 @@ class App extends React.Component {
     markTile(index, tiles) {
         const markFrames = [
             this.tileFrames.HIDDEN,
-            this.tileFrames.FLAGGED,
-            this.tileFrames.QUESTION_MARK
+            this.tileFrames.FLAGGED
         ];
 
         const tile = tiles[index];
@@ -274,6 +293,7 @@ class App extends React.Component {
         this.iterateAdjacentBombCounts(tiles);
 
         this.setState({
+            bombsRemaining: this.getBoardSetup().totalBombs,
             secondsElapsed: 0,
             faceFrame: this.faceFrames.SMILE,
             tiles
@@ -284,6 +304,7 @@ class App extends React.Component {
         const { rows, columns } = this.getBoardSetup();
         return (
             <div>
+                <Counter value={this.state.bombsRemaining} />
                 <Counter value={this.state.secondsElapsed} />
 
                 <FaceButton
