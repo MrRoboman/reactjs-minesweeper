@@ -17,7 +17,7 @@ class App extends React.Component {
         }
 
         this.gameover = false;
-        this.difficulty = "beginner"; // grab this from localStorage
+        this.difficulty = "test"; // grab this from localStorage
         this.boardSettings = {
             test: {
                 rows: 3,
@@ -42,30 +42,61 @@ class App extends React.Component {
 
     onLeftClick(index) {
         console.log("left click" + index);
+        if (this.gameover) {
+            return;
+        }
+        const tiles = this.revealTiles(index, this.state.tiles.slice());
+        if (this.checkForWin(tiles)) {
+            console.log("winner");
+            this.gameover = true;
+            this.flagRemainingBombs(tiles);
+        }
+        this.setState({tiles});
     }
 
     onRightClick(index) {
         console.log("right click" + index);
+        if (this.gameover) {
+            return;
+        }
+        console.log(this.state)
+        const tiles = this.markTile(index, this.state.tiles.slice());
+        this.setState({tiles});
     }
 
-    revealTiles(index, tiles) {
-        const tile = tiles[tileIndex];
-        if(tile.tileFrame === this.tileFrames.HIDDEN) {
-            if(tile.isBomb) {
-                this.gameover = true;
-                // this.revealBombs(tiles);
-                tile.tileFrame = this.tileFrames.DETONATED;
+    checkForWin(tiles) {
+        for(let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            if(tile.tileFrame !== this.tileFrames.REVEALED && !tile.isBomb) {
+                return false;
             }
-            else {
-                tile.tileFrame = this.tileFrames.REVEALED;
-                if(tile.adjacentBombCount === 0) {
-                    const adjacentIndices = this.getAdjacentTileIndices(index);
-                    adjacentIndices.forEach(adjacentIndex => {
-                        this.revealTiles(adjacentIndex, tiles);
-                    });
-                }
+            return true;
+        }
+    }
+
+    flagRemainingBombs(tiles) {
+        for(let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            if(tile.isBomb) {
+                tile.tileFrame = this.tileFrames.FLAGGED;
             }
         }
+    }
+
+    markTile(index, tiles) {
+        const markFrames = [
+            this.tileFrames.HIDDEN,
+            this.tileFrames.FLAGGED,
+            this.tileFrames.QUESTION_MARK
+        ];
+
+        const tile = tiles[index];
+        const currentMark = markFrames.indexOf(tile.tileFrame);
+        if (currentMark > -1) {
+            const nextMark = markFrames[(currentMark + 1) % markFrames.length];
+            tile.tileFrame = nextMark;
+        }
+
         return tiles;
     }
 
@@ -125,12 +156,12 @@ class App extends React.Component {
         // const adjacentTiles = [];
         // deltaIndices.forEach(delta => {
         //     const adjacentIndex = index + delta;
-        //     if(adjacentIndex >= 0 && adjacentIndex < tiles.length) {
+        //     if (adjacentIndex >= 0 && adjacentIndex < tiles.length) {
         //         const thisColumn = index % columns;
         //         const otherColumn = adjacentIndex % columns;
         //         const columnsAreAdjacent = Math.abs(thisColumn - otherColumn) <= 1;
         //
-        //         if(columnsAreAdjacent) {
+        //         if (columnsAreAdjacent) {
         //             adjacentTiles.push(tiles[adjacentIndex]);
         //         }
         //     }
@@ -141,13 +172,46 @@ class App extends React.Component {
 
     iterateAdjacentBombCounts(tiles) {
         for(let i = 0; i < tiles.length; i++) {
-            if(tiles[i].isBomb) {
+            if (tiles[i].isBomb) {
                 const adjacentIndices = this.getAdjacentTileIndices(i);
                 adjacentIndices.forEach(adjacentIndex => {
                     tiles[adjacentIndex].adjacentBombCount++;
                 })
             }
         }
+    }
+
+    revealTiles(index, tiles) {
+        const tile = tiles[index];
+        if (tile.tileFrame === this.tileFrames.HIDDEN) {
+            if (tile.isBomb) {
+                this.gameover = true;
+                this.revealBombs(tiles);
+                tile.tileFrame = this.tileFrames.DETONATED;
+            } else {
+                tile.tileFrame = this.tileFrames.REVEALED;
+                if (tile.adjacentBombCount === 0) {
+                    this.getAdjacentTileIndices(index, tiles).forEach(adjacentTileIndex => {
+                        this.revealTiles(adjacentTileIndex, tiles);
+                    });
+                }
+            }
+        }
+        return tiles;
+    }
+
+    revealBombs(tiles) {
+        tiles.forEach(tile => {
+            if (tile.isBomb) {
+                if (tile.tileFrame !== this.tileFrames.FLAGGED) {
+                    tile.tileFrame = this.tileFrames.REVEALED;
+                }
+            } else if (tile.tileFrame === this.tileFrames.FLAGGED) {
+                tile.tileFrame = this.tileFrames.BOMB_X;
+            }
+        });
+
+        return tiles;
     }
 
     render() {
