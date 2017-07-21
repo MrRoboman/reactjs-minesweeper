@@ -3,6 +3,59 @@
     flex-wrap: wrap;
 }
 
+.counter {
+    display: flex;
+    width: 39px;
+    height: 23px;
+}
+
+.digit {
+    display: flex;
+    width: 13px;
+    height: 23px;
+    background: url('assets/minesweepersprite.png') no-repeat;
+}
+
+.digit.digit-0 {
+    background-position: 0 -32px;
+}
+
+.digit.digit-1 {
+    background-position: -13px -32px;
+}
+
+.digit.digit-2 {
+    background-position: -26px -32px;
+}
+
+.digit.digit-3 {
+    background-position: -39px -32px;
+}
+
+.digit.digit-4 {
+    background-position: -52px -32px;
+}
+
+.digit.digit-5 {
+    background-position: -65px -32px;
+}
+
+.digit.digit-6 {
+    background-position: -78px -32px;
+}
+
+.digit.digit-7 {
+    background-position: -91px -32px;
+}
+
+.digit.digit-8 {
+    background-position: -104px -32px;
+}
+
+.digit.digit-9 {
+    background-position: -117px -32px;
+}
+
 .face-button {
     display: flex;
     width: 26px;

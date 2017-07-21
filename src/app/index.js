@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import Board from '../components/board';
+import Counter from '../components/counter';
+import Digit from '../components/digit';
 import FaceButton from '../components/facebutton';
 
 class App extends React.Component {
@@ -136,7 +138,7 @@ class App extends React.Component {
 
         return tiles;
     }
-    
+
     getTestTiles() {
         const boardSetup = this.getBoardSetup();
         const tileCount = boardSetup.rows * boardSetup.columns;
@@ -250,8 +252,14 @@ class App extends React.Component {
 
     render() {
         const { rows, columns } = this.getBoardSetup();
+        const digits = [];
+        for(let i = 0; i < 10; i++) {
+            digits.push(<Digit key={i} digit={i}/>);
+        }
         return (
             <div>
+                <Counter value={1000} />
+                {digits}
                 <FaceButton
                     tileFrame={this.state.faceFrame}
                     onClick={this.reset.bind(this)}
