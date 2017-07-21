@@ -3,6 +3,33 @@
     flex-wrap: wrap;
 }
 
+.face-button {
+    display: flex;
+    width: 26px;
+    height: 26px;
+    background: url('assets/minesweepersprite.png') no-repeat;
+}
+
+.face-button.smile-clicked {
+    background-position: 0 -55px;
+}
+
+.face-button.smile {
+    background-position: -26px -55px;
+}
+
+.face-button.oface {
+    background-position: -52px -55px;
+}
+
+.face-button.frown {
+    background-position: -78px -55px;
+}
+
+.face-button.shades {
+    background-position: -104px -55px;
+}
+
 .tile {
     display: flex;
     width: 16px;

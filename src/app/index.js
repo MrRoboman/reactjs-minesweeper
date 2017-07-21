@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import Board from '../components/board';
+import FaceButton from '../components/facebutton';
 
 class App extends React.Component {
     constructor() {
@@ -14,7 +15,15 @@ class App extends React.Component {
             HIDDEN: 'hidden',
             QUESTION_MARK: 'question_mark',
             REVEALED: 'revealed'
-        }
+        };
+
+        this.faceFrames = {
+            SMILE_CLICKED: 'smile-clicked',
+            SMILE: 'smile',
+            OFACE: 'oface',
+            FROWN: 'frown',
+            SHADES: 'shades'
+        };
 
         this.gameover = false;
         this.difficulty = "test"; // grab this from localStorage
@@ -36,6 +45,7 @@ class App extends React.Component {
         this.iterateAdjacentBombCounts(tiles);
 
         this.state = {
+            faceFrame: this.faceFrames.SMILE,
             tiles
         };
     }
@@ -70,8 +80,8 @@ class App extends React.Component {
             if(tile.tileFrame !== this.tileFrames.REVEALED && !tile.isBomb) {
                 return false;
             }
-            return true;
         }
+        return true;
     }
 
     flagRemainingBombs(tiles) {
@@ -123,6 +133,21 @@ class App extends React.Component {
             });
         }
         this.shuffle(tiles);
+
+        return tiles;
+    }
+    
+    getTestTiles() {
+        const boardSetup = this.getBoardSetup();
+        const tileCount = boardSetup.rows * boardSetup.columns;
+        const tiles = [];
+        for(let i = 0; i < tileCount; i++) {
+            tiles.push({
+                tileFrame: this.tileFrames.HIDDEN,
+                isBomb: i===0,
+                adjacentBombCount: 0
+            });
+        }
 
         return tiles;
     }
@@ -214,16 +239,31 @@ class App extends React.Component {
         return tiles;
     }
 
+    reset() {
+        this.gameover = false;
+
+        const tiles = this.getNewShuffledTiles();
+        this.iterateAdjacentBombCounts(tiles);
+
+        this.setState({tiles});
+    }
+
     render() {
         const { rows, columns } = this.getBoardSetup();
         return (
-            <Board
-                rows={rows}
-                columns={columns}
-                tiles={this.state.tiles}
-                onLeftClick={this.onLeftClick.bind(this)}
-                onRightClick={this.onRightClick.bind(this)}
-            />
+            <div>
+                <FaceButton
+                    tileFrame={this.state.faceFrame}
+                    onClick={this.reset.bind(this)}
+                     />
+                <Board
+                    rows={rows}
+                    columns={columns}
+                    tiles={this.state.tiles}
+                    onLeftClick={this.onLeftClick.bind(this)}
+                    onRightClick={this.onRightClick.bind(this)}
+                />
+            </div>
         );
     }
 }
