@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 
 import Board from '../components/board';
 import Counter from '../components/counter';
-import Digit from '../components/digit';
 import FaceButton from '../components/facebutton';
 
 class App extends React.Component {
@@ -27,6 +26,7 @@ class App extends React.Component {
             SHADES: 'shades'
         };
 
+        this.interval = null;
         this.gameover = false;
         this.difficulty = "test"; // grab this from localStorage
         this.boardSettings = {
@@ -47,6 +47,7 @@ class App extends React.Component {
         this.iterateAdjacentBombCounts(tiles);
 
         this.state = {
+            secondsElapsed: 0,
             faceFrame: this.faceFrames.SMILE,
             tiles
         };
@@ -57,10 +58,12 @@ class App extends React.Component {
         if (this.gameover) {
             return;
         }
+        this.startTimer();
         const tiles = this.revealTiles(index, this.state.tiles.slice());
         if (this.checkForWin(tiles)) {
             console.log("winner");
             this.gameover = true;
+            this.stopTimer();
             this.flagRemainingBombs(tiles);
         }
         this.setState({tiles});
@@ -74,6 +77,27 @@ class App extends React.Component {
         console.log(this.state)
         const tiles = this.markTile(index, this.state.tiles.slice());
         this.setState({tiles});
+    }
+
+    updateTimer() {
+        console.log('updatetimer');
+        this.setState({
+            secondsElapsed: this.state.secondsElapsed + 1
+        });
+    }
+
+    startTimer() {
+        console.log('starttimer');
+        if (!this.interval) {
+            this.interval = window.setInterval(this.updateTimer.bind(this), 1000);
+        }
+    }
+
+    stopTimer() {
+        if (this.interval) {
+            window.clearInterval(this.interval);
+            this.interval = null;
+        }
     }
 
     checkForWin(tiles) {
@@ -213,6 +237,7 @@ class App extends React.Component {
         if (tile.tileFrame === this.tileFrames.HIDDEN) {
             if (tile.isBomb) {
                 this.gameover = true;
+                this.stopTimer();
                 this.revealBombs(tiles);
                 tile.tileFrame = this.tileFrames.DETONATED;
             } else {
@@ -243,23 +268,24 @@ class App extends React.Component {
 
     reset() {
         this.gameover = false;
+        this.stopTimer();
 
         const tiles = this.getNewShuffledTiles();
         this.iterateAdjacentBombCounts(tiles);
 
-        this.setState({tiles});
+        this.setState({
+            secondsElapsed: 0,
+            faceFrame: this.faceFrames.SMILE,
+            tiles
+        });
     }
 
     render() {
         const { rows, columns } = this.getBoardSetup();
-        const digits = [];
-        for(let i = 0; i < 10; i++) {
-            digits.push(<Digit key={i} digit={i}/>);
-        }
         return (
             <div>
-                <Counter value={1000} />
-                {digits}
+                <Counter value={this.state.secondsElapsed} />
+
                 <FaceButton
                     tileFrame={this.state.faceFrame}
                     onClick={this.reset.bind(this)}
