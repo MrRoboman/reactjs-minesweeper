@@ -16,7 +16,8 @@ class App extends React.Component {
             REVEALED: 'revealed'
         }
 
-        this.difficulty = "beginner";
+        this.gameover = false;
+        this.difficulty = "beginner"; // grab this from localStorage
         this.boardSettings = {
             test: {
                 rows: 3,
@@ -37,6 +38,35 @@ class App extends React.Component {
         this.state = {
             tiles
         };
+    }
+
+    onLeftClick(index) {
+        console.log("left click" + index);
+    }
+
+    onRightClick(index) {
+        console.log("right click" + index);
+    }
+
+    revealTiles(index, tiles) {
+        const tile = tiles[tileIndex];
+        if(tile.tileFrame === this.tileFrames.HIDDEN) {
+            if(tile.isBomb) {
+                this.gameover = true;
+                // this.revealBombs(tiles);
+                tile.tileFrame = this.tileFrames.DETONATED;
+            }
+            else {
+                tile.tileFrame = this.tileFrames.REVEALED;
+                if(tile.adjacentBombCount === 0) {
+                    const adjacentIndices = this.getAdjacentTileIndices(index);
+                    adjacentIndices.forEach(adjacentIndex => {
+                        this.revealTiles(adjacentIndex, tiles);
+                    });
+                }
+            }
+        }
+        return tiles;
     }
 
     getBoardSetup() {
@@ -66,8 +96,9 @@ class App extends React.Component {
         return tiles;
     }
 
-    getAdjacentTiles(index, tiles) {
-        const { columns } = this.getBoardSetup();
+    getAdjacentTileIndices(index) {
+        const { rows, columns } = this.getBoardSetup();
+        const totalTiles = rows * columns;
         const deltaIndices = [
             -columns - 1,
             -columns,
@@ -79,29 +110,41 @@ class App extends React.Component {
             columns + 1,
         ];
 
-        const adjacentTiles = [];
-        deltaIndices.forEach(delta => {
-            const adjacentIndex = index + delta;
-            if(adjacentIndex >= 0 && adjacentIndex < tiles.length) {
-                const thisColumn = index % columns;
-                const otherColumn = adjacentIndex % columns;
-                const columnsAreAdjacent = Math.abs(thisColumn - otherColumn) <= 1;
+        let adjacentIndices = deltaIndices.map(delta => index + delta);
 
-                if(columnsAreAdjacent) {
-                    adjacentTiles.push(tiles[adjacentIndex]);
-                }
-            }
+        adjacentIndices = adjacentIndices.filter(adjacentIndex => {
+            const thisColumn = index % columns;
+            const otherColumn = adjacentIndex % columns;
+            const columnsAreAdjacent = Math.abs(thisColumn - otherColumn) <= 1;
+            const indexInBounds = adjacentIndex >= 0 && adjacentIndex < totalTiles;
+
+            return indexInBounds && columnsAreAdjacent;
         });
 
-        return adjacentTiles;
+        return adjacentIndices;
+        // const adjacentTiles = [];
+        // deltaIndices.forEach(delta => {
+        //     const adjacentIndex = index + delta;
+        //     if(adjacentIndex >= 0 && adjacentIndex < tiles.length) {
+        //         const thisColumn = index % columns;
+        //         const otherColumn = adjacentIndex % columns;
+        //         const columnsAreAdjacent = Math.abs(thisColumn - otherColumn) <= 1;
+        //
+        //         if(columnsAreAdjacent) {
+        //             adjacentTiles.push(tiles[adjacentIndex]);
+        //         }
+        //     }
+        // });
+        //
+        // return adjacentTiles;
     }
 
     iterateAdjacentBombCounts(tiles) {
         for(let i = 0; i < tiles.length; i++) {
             if(tiles[i].isBomb) {
-                const adjacentTiles = this.getAdjacentTiles(i, tiles);
-                adjacentTiles.forEach(adjacentTile => {
-                    adjacentTile.adjacentBombCount++;
+                const adjacentIndices = this.getAdjacentTileIndices(i);
+                adjacentIndices.forEach(adjacentIndex => {
+                    tiles[adjacentIndex].adjacentBombCount++;
                 })
             }
         }
@@ -114,6 +157,8 @@ class App extends React.Component {
                 rows={rows}
                 columns={columns}
                 tiles={this.state.tiles}
+                onLeftClick={this.onLeftClick.bind(this)}
+                onRightClick={this.onRightClick.bind(this)}
             />
         );
     }

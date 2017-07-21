@@ -11,5 +11,11 @@ export default function Tile(props) {
         }
     }
 
-    return <div className={className} />;
+    return <div
+                className={className}
+                onClick={() => props.onLeftClick(props.index)}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    props.onRightClick(props.index);
+                }} />;
 }

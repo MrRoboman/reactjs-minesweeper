@@ -8,7 +8,12 @@ export default function Board(props) {
     const height = props.rows * TILE_SIZE;
 
     const tiles = props.tiles.map((tileProps, index) => {
-        return <Tile key={index} index={index} {...tileProps} />;
+        return <Tile
+                    key={index}
+                    index={index}
+                    {...tileProps}
+                    onLeftClick={props.onLeftClick}
+                    onRightClick={props.onRightClick} />;
     });
 
     return (
