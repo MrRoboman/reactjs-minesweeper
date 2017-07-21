@@ -28,12 +28,12 @@ class App extends React.Component {
 
         this.interval = null;
         this.gameover = false;
-        this.difficulty = "test"; // grab this from localStorage
+        this.difficulty = "beginner"; // grab this from localStorage
         this.boardSettings = {
             test: {
-                rows: 3,
-                columns: 3,
-                totalBombs: 1
+                rows: 1,
+                columns: 16,
+                totalBombs: 7
             },
             beginner: {
                 rows: 8,
@@ -44,6 +44,7 @@ class App extends React.Component {
 
         // Testing Board
         const tiles = this.getNewShuffledTiles();
+        // const tiles = this.getTestTiles();
         this.iterateAdjacentBombCounts(tiles);
 
         this.state = {
@@ -189,7 +190,7 @@ class App extends React.Component {
         for(let i = 0; i < tileCount; i++) {
             tiles.push({
                 tileFrame: this.tileFrames.HIDDEN,
-                isBomb: i===0,
+                isBomb: i < boardSetup.totalBombs,
                 adjacentBombCount: 0
             });
         }
@@ -302,22 +303,27 @@ class App extends React.Component {
 
     render() {
         const { rows, columns } = this.getBoardSetup();
+        const gameWidth = columns * 16 + 12;
         return (
-            <div>
-                <Counter value={this.state.bombsRemaining} />
-                <Counter value={this.state.secondsElapsed} />
+            <div className="minesweeper" style={{width: gameWidth}}>
+                <div className="minesweeper minesweeper-indent minesweeper-header">
+                    <Counter value={this.state.bombsRemaining} />
+                    <FaceButton
+                        tileFrame={this.state.faceFrame}
+                        onClick={this.reset.bind(this)}
+                         />
+                    <Counter value={this.state.secondsElapsed} />
+                </div>
 
-                <FaceButton
-                    tileFrame={this.state.faceFrame}
-                    onClick={this.reset.bind(this)}
-                     />
-                <Board
-                    rows={rows}
-                    columns={columns}
-                    tiles={this.state.tiles}
-                    onLeftClick={this.onLeftClick.bind(this)}
-                    onRightClick={this.onRightClick.bind(this)}
-                />
+                <div className="minesweeper minesweeper-indent">
+                    <Board
+                        rows={rows}
+                        columns={columns}
+                        tiles={this.state.tiles}
+                        onLeftClick={this.onLeftClick.bind(this)}
+                        onRightClick={this.onRightClick.bind(this)}
+                    />
+                </div>
             </div>
         );
     }
