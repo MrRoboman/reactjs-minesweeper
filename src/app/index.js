@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import Tile from '../components/tile';
+import Board from '../components/board';
 
 class App extends React.Component {
     constructor() {
@@ -16,30 +16,38 @@ class App extends React.Component {
             REVEALED: 'revealed'
         }
 
-        // Testing all tile frames
-        const testTiles = [];
-        const tileFrames = Object.keys(this.tileFrames);
-        for(let key in this.tileFrames) {
-            const tileFrame = this.tileFrames[key];
-            testTiles.push({tileFrame, adjacentBombCount: 0});
-        }
-        for(let i = 1; i < 8; i++) {
-            testTiles.push({tileFrame: "revealed", adjacentBombCount: i});
+        this.difficulty = "beginner";
+        this.boardSettings = {
+            beginner: {
+                rows: 8,
+                columns: 8,
+                totalBombs: 8
+            }
+        };
+
+        // Testing Board
+        const boardSetup = this.boardSettings[this.difficulty];
+        const tiles = [];
+        for(let i = 0; i < boardSetup.columns * boardSetup.rows; i++) {
+            tiles.push({
+                tileFrame: this.tileFrames.HIDDEN,
+                adjacentBombCount: 0
+            });
         }
 
         this.state = {
-            testTiles
+            tiles
         };
     }
 
     render() {
-        const tiles = this.state.testTiles.map((props, index) => {
-            return <Tile key={index} {...props} />
-        });
+        const { rows, columns } = this.boardSettings[this.difficulty];
         return (
-            <div>
-                {tiles}
-            </div>
+            <Board
+                rows={rows}
+                columns={columns}
+                tiles={this.state.tiles}
+            />
         );
     }
 }
