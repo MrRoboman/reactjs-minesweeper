@@ -30,8 +30,8 @@ class App extends React.Component {
         const tiles = [];
         for(let i = 0; i < boardSetup.columns * boardSetup.rows; i++) {
             tiles.push({
-                tileFrame: this.tileFrames.HIDDEN,
-                adjacentBombCount: 0
+                tileFrame: this.tileFrames.REVEALED,
+                adjacentBombCount: -1
             });
         }
 

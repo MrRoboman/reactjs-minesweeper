@@ -42,7 +42,11 @@
     background-position: -112px 0;
 }
 
-.tile.bomb {
+.tile.revealed-8 {
+    background-position: -128px 0;
+}
+
+.tile.revealed-bomb {
     background-position: 0 -16px;
 }
 
