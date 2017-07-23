@@ -18,11 +18,13 @@ class GameModal extends React.Component {
         });
     }
 
-    componentWillReceiveProps(newProps) {
-        this.setState({
-            difficulty: newProps.difficulty,
-            boardSettings: newProps.boardSettings
-        });
+    componentDidUpdate(prevProps, prevState) {
+      if (!prevProps.isOpen && this.props.isOpen) {
+          this.setState({
+              difficulty: this.props.difficulty,
+              boardSettings: this.props.boardSettings
+          });
+      }
     }
 
     onChangeDifficulty(event) {
