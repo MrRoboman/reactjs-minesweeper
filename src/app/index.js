@@ -38,11 +38,6 @@ class App extends React.Component {
             maxColumns: 50,
             minBombs: 1,
             difficulties: {
-                test: {
-                    rows: 1,
-                    columns: 16,
-                    totalBombs: 1
-                },
                 beginner: {
                     rows: 9,
                     columns: 9,
@@ -65,9 +60,11 @@ class App extends React.Component {
                 }
             }
         };
+
         window.addEventListener('mouseup', this.onMouseUp.bind(this));
+
         this.state = {
-            difficulty: "test"
+            difficulty: "beginner"
         };
     }
 
@@ -116,108 +113,15 @@ class App extends React.Component {
         }
     }
 
-    onLeftClick(index) {
-        if (this.gameover) {
-            return;
-        }
-
-        this.startTimer();
-
-        const boardSettings = this.boardSettings.difficulties[this.state.difficulty];
-        const tiles = this.state.tiles.slice();
-        this.revealTiles(index, tiles, boardSettings);
-        let { bombsRemaining } = this.state;
-        let faceFrame = this.faceFrames.SMILE;
-
-        if (this.checkForWin(tiles)) {
-            this.gameover = true;
-            this.stopTimer();
-            this.flagAllBombs(tiles);
-            bombsRemaining = 0;
-            faceFrame = this.faceFrames.SHADES;
-        } else if (this.gameover) {
-            faceFrame = this.faceFrames.FROWN;
-        }
-
-        this.setState({
-            bombsRemaining,
-            faceFrame,
-            tiles
-        });
-    }
-
-    onRightClick(index) {
-        if (this.gameover) {
-            return;
-        }
-
-        const tiles = this.markTile(index, this.state.tiles.slice());
-
-        let { bombsRemaining } = this.state;
-
-        if (tiles[index].tileFrame === this.tileFrames.HIDDEN) {
-            bombsRemaining++;
-        } else {
-            bombsRemaining--;
-        }
-
-        this.setState({
-            bombsRemaining,
-            tiles
-        });
-    }
-
-    startTimer() {
-        if (!this.interval) {
-            this.interval = window.setInterval(this.updateTimer.bind(this), 1000);
-        }
-    }
-
-    updateTimer() {
-        this.setState({
-            secondsElapsed: this.state.secondsElapsed + 1
-        });
-    }
-
-    stopTimer() {
-        if (this.interval) {
-            window.clearInterval(this.interval);
-            this.interval = null;
-        }
-    }
-
-    checkForWin(tiles) {
-        for (let i = 0; i < tiles.length; i++) {
-            const tile = tiles[i];
-            if(tile.tileFrame !== this.tileFrames.REVEALED && !tile.isBomb) {
-                return false;
+    iterateAdjacentBombCounts(tiles, boardSettings) {
+        for(let i = 0; i < tiles.length; i++) {
+            if (tiles[i].isBomb) {
+                const adjacentIndices = this.getAdjacentTileIndices(i, boardSettings);
+                adjacentIndices.forEach(adjacentIndex => {
+                    tiles[adjacentIndex].adjacentBombCount++;
+                })
             }
         }
-        return true;
-    }
-
-    flagAllBombs(tiles) {
-        tiles.forEach(tile => {
-            if (tile.isBomb) {
-                tile.tileFrame = this.tileFrames.FLAGGED;
-            }
-        });
-    }
-
-    markTile(index, tiles) {
-        const markFrames = [
-            this.tileFrames.HIDDEN,
-            this.tileFrames.FLAGGED,
-        ];
-
-        const tile = tiles[index];
-        const currentMark = markFrames.indexOf(tile.tileFrame);
-        if (currentMark > -1) {
-            const nextMark = markFrames[(currentMark + 1) % markFrames.length];
-            tile.tileFrame = nextMark;
-        }
-
-        return tiles;
     }
 
     getAdjacentTileIndices(index, boardSettings) {
@@ -239,41 +143,42 @@ class App extends React.Component {
         adjacentIndices = adjacentIndices.filter(adjacentIndex => {
             const thisColumn = index % columns;
             const otherColumn = adjacentIndex % columns;
-            const columnsAreAdjacent = Math.abs(thisColumn - otherColumn) <= 1;
-            const indexInBounds = adjacentIndex >= 0 && adjacentIndex < totalTiles;
+            const columnsAreAdjacent = (Math.abs(thisColumn - otherColumn) <= 1);
+            const indexInBounds = (adjacentIndex >= 0 && adjacentIndex < totalTiles);
 
-            return indexInBounds && columnsAreAdjacent;
+            return (indexInBounds && columnsAreAdjacent);
         });
 
         return adjacentIndices;
     }
 
-    iterateAdjacentBombCounts(tiles, boardSettings) {
-        for(let i = 0; i < tiles.length; i++) {
-            if (tiles[i].isBomb) {
-                const adjacentIndices = this.getAdjacentTileIndices(i, boardSettings);
-                adjacentIndices.forEach(adjacentIndex => {
-                    tiles[adjacentIndex].adjacentBombCount++;
-                })
-            }
+    startTimer() {
+        if (!this.interval) {
+            this.interval = window.setInterval(this.updateTimer.bind(this), 1000);
+        }
+    }
+
+    updateTimer() {
+        this.setState({
+            secondsElapsed: this.state.secondsElapsed + 1
+        });
+    }
+
+    stopTimer() {
+        if (this.interval) {
+            window.clearInterval(this.interval);
+            this.interval = null;
         }
     }
 
     revealTiles(index, tiles, boardSettings) {
         const tile = tiles[index];
-        if (tile.tileFrame === this.tileFrames.HIDDEN) {
-            if (tile.isBomb) {
-                this.gameover = true;
-                this.stopTimer();
-                this.revealBombs(tiles);
-                tile.tileFrame = this.tileFrames.DETONATED;
-            } else {
-                tile.tileFrame = this.tileFrames.REVEALED;
-                if (tile.adjacentBombCount === 0) {
-                    this.getAdjacentTileIndices(index, boardSettings).forEach(adjacentTileIndex => {
-                        this.revealTiles(adjacentTileIndex, tiles, boardSettings);
-                    });
-                }
+        if (tile.tileFrame === this.tileFrames.HIDDEN && !tile.isBomb) {
+            tile.tileFrame = this.tileFrames.REVEALED;
+            if (tile.adjacentBombCount === 0) {
+                this.getAdjacentTileIndices(index, boardSettings).forEach(adjacentTileIndex => {
+                    this.revealTiles(adjacentTileIndex, tiles, boardSettings);
+                });
             }
         }
         return tiles;
@@ -293,16 +198,94 @@ class App extends React.Component {
         return tiles;
     }
 
-    onModalChange(event) {
+    onLeftClick(index) {
+        if (this.gameover) {
+            return;
+        }
+
+        this.startTimer();
+
+        const boardSettings = this.boardSettings.difficulties[this.state.difficulty];
+        const tiles = _.cloneDeep(this.state.tiles);
+        let { bombsRemaining, faceFrame } = this.state;
+
+        if (tiles[index].isBomb) {
+            this.gameover = true;
+            this.stopTimer();
+            this.revealBombs(tiles);
+            tiles[index].tileFrame = this.tileFrames.DETONATED;
+            faceFrame = this.faceFrames.FROWN;
+        } else {
+            this.revealTiles(index, tiles, boardSettings);
+
+            if (this.playerWon(tiles)) {
+                this.gameover = true;
+                this.stopTimer();
+                this.flagAllBombs(tiles);
+                bombsRemaining = 0;
+                faceFrame = this.faceFrames.SHADES;
+            }
+        }
+
         this.setState({
-            selectedDifficultyOption: event.target.value
+            bombsRemaining,
+            faceFrame,
+            tiles
         });
     }
 
-    onClickGameModal() {
+    onRightClick(index) {
+        if (this.gameover) {
+            return;
+        }
+
+        const tiles = this.flagTile(index, _.cloneDeep(this.state.tiles));
+
+        let { bombsRemaining } = this.state;
+        if (tiles[index].tileFrame === this.tileFrames.HIDDEN) {
+            bombsRemaining++;
+        } else {
+            bombsRemaining--;
+        }
+
         this.setState({
-            gameModalIsOpen: false
-        }, this.reset);
+            bombsRemaining,
+            tiles
+        });
+    }
+
+    playerWon(tiles) {
+        for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            if(tile.tileFrame !== this.tileFrames.REVEALED && !tile.isBomb) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    flagAllBombs(tiles) {
+        tiles.forEach(tile => {
+            if (tile.isBomb) {
+                tile.tileFrame = this.tileFrames.FLAGGED;
+            }
+        });
+    }
+
+    flagTile(index, tiles) {
+        const markFrames = [
+            this.tileFrames.HIDDEN,
+            this.tileFrames.FLAGGED,
+        ];
+
+        const tile = tiles[index];
+        const currentMark = markFrames.indexOf(tile.tileFrame);
+        if (currentMark > -1) {
+            const nextMark = markFrames[(currentMark + 1) % markFrames.length];
+            tile.tileFrame = nextMark;
+        }
+
+        return tiles;
     }
 
     onClickOkGameModal(options) {
@@ -319,6 +302,12 @@ class App extends React.Component {
         });
     }
 
+    closeControlModal() {
+        this.setState({
+            controlModalIsOpen: false
+        });
+    }
+
     onClickGameMenu() {
         this.setState({
             gameModalIsOpen: true
@@ -331,18 +320,6 @@ class App extends React.Component {
         });
     }
 
-    onRequestCloseGameModal() {
-        this.setState({
-            gameModalIsOpen: false
-        });
-    }
-
-    onRequestCloseControlModal() {
-        this.setState({
-            controlModalIsOpen: false
-        });
-    }
-
     onMouseDownBoard(event) {
         if (this.gameover || event.button !== 0) {
             return;
@@ -350,13 +327,6 @@ class App extends React.Component {
         this.setState({
             faceFrame: this.faceFrames.OFACE
         });
-    }
-
-    onMouseUpBoard(event) {
-        if (this.gameover || event.button !== 0) {
-            return;
-        }
-
     }
 
     onMouseDownFace(event) {
@@ -389,56 +359,51 @@ class App extends React.Component {
 
         const { rows, columns } = this.boardSettings.difficulties[this.state.difficulty];
         const gameWidth = columns * 16 + 12;
+
         return (
             <div className="minesweeper-app">
-            <GameModal
-                isOpen={this.state.gameModalIsOpen}
-                boardSettings={_.cloneDeep(this.boardSettings)}
-                difficulty={this.state.difficulty}
-                onClick={this.onClickGameModal.bind(this)}
-                onClickOk={this.onClickOkGameModal.bind(this)}
-                onClickCancel={this.closeGameModal.bind(this)}
-                onChange={this.onModalChange.bind(this)}
-                onRequestClose={this.closeGameModal.bind(this)}
-                />
-
-            <ControlModal
-                isOpen={this.state.controlModalIsOpen}
-                onRequestClose={this.onRequestCloseControlModal.bind(this)}
-                />
-
-            <ul>
-                <li><a className="menulink" onClick={this.onClickGameMenu.bind(this)}>Game</a></li>
-                <li><a className="menulink" onClick={this.onClickControlMenu.bind(this)}>Controls</a></li>
-            </ul>
-
-
-            <div className="minesweeper" style={{width: gameWidth}}>
-
-
-
-                <div className="minesweeper minesweeper-indent minesweeper-header">
-                    <Counter value={this.state.bombsRemaining} />
-                    <FaceButton
-                        tileFrame={this.state.faceFrame}
-                        onMouseDown={this.onMouseDownFace.bind(this)}
-                        onMouseUp={this.onMouseUpFace.bind(this)}
-                         />
-                    <Counter value={this.state.secondsElapsed} />
-                </div>
-
-                <div className="minesweeper minesweeper-indent">
-                    <Board
-                        rows={rows}
-                        columns={columns}
-                        tiles={this.state.tiles}
-                        onLeftClick={this.onLeftClick.bind(this)}
-                        onRightClick={this.onRightClick.bind(this)}
-                        onMouseDown={this.onMouseDownBoard.bind(this)}
-
+                <GameModal
+                    isOpen={this.state.gameModalIsOpen}
+                    boardSettings={_.cloneDeep(this.boardSettings)}
+                    difficulty={this.state.difficulty}
+                    onClickOk={this.onClickOkGameModal.bind(this)}
+                    onClickCancel={this.closeGameModal.bind(this)}
+                    onRequestClose={this.closeGameModal.bind(this)}
                     />
+
+                <ControlModal
+                    isOpen={this.state.controlModalIsOpen}
+                    onRequestClose={this.closeControlModal.bind(this)}
+                    />
+
+                <ul>
+                    <li><a className="menulink" onClick={this.onClickGameMenu.bind(this)}>Game</a></li>
+                    <li><a className="menulink" onClick={this.onClickControlMenu.bind(this)}>Controls</a></li>
+                </ul>
+
+
+                <div className="minesweeper" style={{width: gameWidth}}>
+                    <div className="minesweeper minesweeper-indent minesweeper-header">
+                        <Counter value={this.state.bombsRemaining} />
+                        <FaceButton
+                            tileFrame={this.state.faceFrame}
+                            onMouseDown={this.onMouseDownFace.bind(this)}
+                            onMouseUp={this.onMouseUpFace.bind(this)}
+                             />
+                        <Counter value={this.state.secondsElapsed} />
+                    </div>
+
+                    <div className="minesweeper minesweeper-indent">
+                        <Board
+                            rows={rows}
+                            columns={columns}
+                            tiles={_.cloneDeep(this.state.tiles)}
+                            onLeftClick={this.onLeftClick.bind(this)}
+                            onRightClick={this.onRightClick.bind(this)}
+                            onMouseDown={this.onMouseDownBoard.bind(this)}
+                        />
+                    </div>
                 </div>
-            </div>
             </div>
         );
     }
