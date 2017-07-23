@@ -1,3 +1,98 @@
+* {
+    font-family: Verdana, sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+}
+
+ul {
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+}
+
+li {
+    float: left;
+    padding-right: 12px;
+}
+
+.menulink {
+    cursor: pointer;
+}
+
+.modal {
+    width: 520px;
+    height: auto;
+    background-color: rgba(220,220,220,0.7);
+    display: block;
+    margin: auto;
+    margin-top: 20px;
+    border: 2px solid #ccc;
+    padding: 14px;
+    border-radius: 5px;
+}
+
+.modal:focus {
+    outline: 0;
+}
+
+.modal-control ul {
+    padding-left: 20px;
+    list-style: circle;
+}
+
+.modal-control li {
+    padding: 4px 4px;
+}
+
+.modal-content {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    font-size: 1.4em;
+}
+
+.modal-content table thead tr th {
+    text-align: right;
+}
+
+/*.modal-content table tbody tr td label {
+    display: block;
+    width: 100px;
+}*/
+
+.modal-content table tbody tr td input {
+    display: block;
+    width: 30px;
+    float: right;
+    clear: both;
+    text-align: right;
+    font-size: 15px;
+}
+
+.modal-content table thead tr th {
+    padding-left: 50px;
+}
+
+.modal-content table tbody tr td {
+    text-align: right;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+}
+
+.modal-buttons button {
+    margin: 20px 10px 10px 10px;
+    width: 80px;
+}
 
 .minesweeper {
     display: flex;
@@ -6,6 +101,7 @@
     padding: 0;
     border-right: 2px solid #999;
     border-bottom: 2px solid #999;
+    margin-top: 20px;
 }
 
 .minesweeper.minesweeper-indent {

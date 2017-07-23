@@ -1,9 +1,14 @@
 import React from 'react';
+import Modal from 'react-modal';
 import ReactDOM from 'react-dom';
 
 import Board from '../components/board';
+import ControlModal from '../components/controlmodal';
 import Counter from '../components/counter';
 import FaceButton from '../components/facebutton';
+import GameModal from '../components/gamemodal';
+
+const _ = require('lodash');
 
 class App extends React.Component {
     constructor() {
@@ -26,54 +31,81 @@ class App extends React.Component {
             SHADES: 'shades'
         };
 
-        this.interval = null;
-        this.gameover = false;
-        this.difficulty = "test"; // grab this from localStorage
         this.boardSettings = {
-            test: {
-                rows: 1,
-                columns: 16,
-                totalBombs: 1
-            },
-            beginner: {
-                rows: 8,
-                columns: 8,
-                totalBombs: 8
+            minRows: 1,
+            maxRows: 30,
+            minColumns: 9,
+            maxColumns: 50,
+            minBombs: 1,
+            difficulties: {
+                test: {
+                    rows: 1,
+                    columns: 16,
+                    totalBombs: 1
+                },
+                beginner: {
+                    rows: 9,
+                    columns: 9,
+                    totalBombs: 10
+                },
+                intermediate: {
+                    rows: 16,
+                    columns: 16,
+                    totalBombs: 40
+                },
+                expert: {
+                    rows: 16,
+                    columns: 30,
+                    totalBombs: 99
+                },
+                custom: {
+                    rows: 10,
+                    columns: 10,
+                    totalBombs: 10
+                }
             }
         };
-
-        // Testing Board
-        const tiles = this.getNewShuffledTiles();
-        // const tiles = this.getTestTiles();
-        this.iterateAdjacentBombCounts(tiles);
-
-        const { totalBombs } = this.getBoardSetup();
-
         this.state = {
-            bombsRemaining: totalBombs,
-            secondsElapsed: 0,
-            faceFrame: this.faceFrames.SMILE,
-            tiles
+            difficulty: "test"
         };
     }
 
-    getBoardSetup() {
-        return this.boardSettings[this.difficulty];
+    componentDidMount() {
+        this.reset();
     }
 
     reset() {
         this.gameover = false;
         this.stopTimer();
 
-        const tiles = this.getNewShuffledTiles();
-        this.iterateAdjacentBombCounts(tiles);
+        const boardSettings = this.boardSettings.difficulties[this.state.difficulty];
+        const tiles = this.getNewTiles(boardSettings);
+        this.shuffle(tiles);
+        this.iterateAdjacentBombCounts(tiles, boardSettings);
 
         this.setState({
-            bombsRemaining: this.getBoardSetup().totalBombs,
+            gameModalIsOpen: false,
+            controlModalIsOpen: false,
+            bombsRemaining: boardSettings.totalBombs,
             secondsElapsed: 0,
             faceFrame: this.faceFrames.SMILE,
             tiles
         });
+    }
+
+    getNewTiles(boardSettings) {
+        const { rows, columns, totalBombs } = boardSettings;
+        const tileCount = rows * columns;
+        const tiles = [];
+        for(let i = 0; i < tileCount; i++) {
+            tiles.push({
+                tileFrame: this.tileFrames.HIDDEN,
+                isBomb: (i < totalBombs),
+                adjacentBombCount: 0
+            });
+        }
+
+        return tiles;
     }
 
     shuffle(tiles) {
@@ -83,37 +115,6 @@ class App extends React.Component {
         }
     }
 
-    getNewShuffledTiles() {
-        const boardSetup = this.getBoardSetup();
-        const tileCount = boardSetup.rows * boardSetup.columns;
-        const tiles = [];
-        for(let i = 0; i < tileCount; i++) {
-            tiles.push({
-                tileFrame: this.tileFrames.HIDDEN,
-                isBomb: (i < boardSetup.totalBombs),
-                adjacentBombCount: 0
-            });
-        }
-        this.shuffle(tiles);
-
-        return tiles;
-    }
-
-    getTestTiles() {
-        const boardSetup = this.getBoardSetup();
-        const tileCount = boardSetup.rows * boardSetup.columns;
-        const tiles = [];
-        for(let i = 0; i < tileCount; i++) {
-            tiles.push({
-                tileFrame: this.tileFrames.HIDDEN,
-                isBomb: i < boardSetup.totalBombs,
-                adjacentBombCount: 0
-            });
-        }
-
-        return tiles;
-    }
-
     onLeftClick(index) {
         if (this.gameover) {
             return;
@@ -121,7 +122,9 @@ class App extends React.Component {
 
         this.startTimer();
 
-        const tiles = this.revealTiles(index, this.state.tiles.slice());
+        const boardSettings = this.boardSettings.difficulties[this.state.difficulty];
+        const tiles = this.state.tiles.slice();
+        this.revealTiles(index, tiles, boardSettings);
         let { bombsRemaining } = this.state;
         let faceFrame = this.faceFrames.SMILE;
 
@@ -148,6 +151,7 @@ class App extends React.Component {
         const tiles = this.markTile(index, this.state.tiles.slice());
 
         let { bombsRemaining } = this.state;
+
         if (tiles[index].tileFrame === this.tileFrames.HIDDEN) {
             bombsRemaining++;
         } else {
@@ -180,7 +184,7 @@ class App extends React.Component {
     }
 
     checkForWin(tiles) {
-        for(let i = 0; i < tiles.length; i++) {
+        for (let i = 0; i < tiles.length; i++) {
             const tile = tiles[i];
             if(tile.tileFrame !== this.tileFrames.REVEALED && !tile.isBomb) {
                 return false;
@@ -201,7 +205,6 @@ class App extends React.Component {
         const markFrames = [
             this.tileFrames.HIDDEN,
             this.tileFrames.FLAGGED,
-            this.tileFrames.QUESTION_MARK
         ];
 
         const tile = tiles[index];
@@ -214,8 +217,8 @@ class App extends React.Component {
         return tiles;
     }
 
-    getAdjacentTileIndices(index) {
-        const { rows, columns } = this.getBoardSetup();
+    getAdjacentTileIndices(index, boardSettings) {
+        const { rows, columns } = boardSettings;
         const totalTiles = rows * columns;
         const deltaIndices = [
             -columns - 1,
@@ -242,10 +245,10 @@ class App extends React.Component {
         return adjacentIndices;
     }
 
-    iterateAdjacentBombCounts(tiles) {
+    iterateAdjacentBombCounts(tiles, boardSettings) {
         for(let i = 0; i < tiles.length; i++) {
             if (tiles[i].isBomb) {
-                const adjacentIndices = this.getAdjacentTileIndices(i);
+                const adjacentIndices = this.getAdjacentTileIndices(i, boardSettings);
                 adjacentIndices.forEach(adjacentIndex => {
                     tiles[adjacentIndex].adjacentBombCount++;
                 })
@@ -253,7 +256,7 @@ class App extends React.Component {
         }
     }
 
-    revealTiles(index, tiles) {
+    revealTiles(index, tiles, boardSettings) {
         const tile = tiles[index];
         if (tile.tileFrame === this.tileFrames.HIDDEN) {
             if (tile.isBomb) {
@@ -264,8 +267,8 @@ class App extends React.Component {
             } else {
                 tile.tileFrame = this.tileFrames.REVEALED;
                 if (tile.adjacentBombCount === 0) {
-                    this.getAdjacentTileIndices(index, tiles).forEach(adjacentTileIndex => {
-                        this.revealTiles(adjacentTileIndex, tiles);
+                    this.getAdjacentTileIndices(index, boardSettings).forEach(adjacentTileIndex => {
+                        this.revealTiles(adjacentTileIndex, tiles, boardSettings);
                     });
                 }
             }
@@ -287,11 +290,91 @@ class App extends React.Component {
         return tiles;
     }
 
+    onModalChange(event) {
+        this.setState({
+            selectedDifficultyOption: event.target.value
+        });
+    }
+
+    onClickGameModal() {
+        this.setState({
+            gameModalIsOpen: false
+        }, this.reset);
+    }
+
+    onClickOkGameModal(options) {
+        this.boardSettings = options.boardSettings;
+        this.setState({
+            difficulty: options.difficulty,
+            gameModalIsOpen: false
+        }, this.reset);
+    }
+
+    closeGameModal() {
+        this.setState({
+            gameModalIsOpen: false
+        });
+    }
+
+    onClickGameMenu() {
+        this.setState({
+            gameModalIsOpen: true
+        });
+    }
+
+    onClickControlMenu() {
+        this.setState({
+            controlModalIsOpen: true
+        });
+    }
+
+    onRequestCloseGameModal() {
+        this.setState({
+            gameModalIsOpen: false
+        });
+    }
+
+    onRequestCloseControlModal() {
+        this.setState({
+            controlModalIsOpen: false
+        });
+    }
+
     render() {
-        const { rows, columns } = this.getBoardSetup();
+        if (!this.state.tiles) {
+            return <div>Loading...</div>;
+        }
+
+        const { rows, columns } = this.boardSettings.difficulties[this.state.difficulty];
         const gameWidth = columns * 16 + 12;
         return (
+            <div className="minesweeper-app">
+            <GameModal
+                isOpen={this.state.gameModalIsOpen}
+                boardSettings={_.cloneDeep(this.boardSettings)}
+                difficulty={this.state.difficulty}
+                onClick={this.onClickGameModal.bind(this)}
+                onClickOk={this.onClickOkGameModal.bind(this)}
+                onClickCancel={this.closeGameModal.bind(this)}
+                onChange={this.onModalChange.bind(this)}
+                onRequestClose={this.closeGameModal.bind(this)}
+                />
+
+            <ControlModal
+                isOpen={this.state.controlModalIsOpen}
+                onRequestClose={this.onRequestCloseControlModal.bind(this)}
+                />
+
+            <ul>
+                <li><a className="menulink" onClick={this.onClickGameMenu.bind(this)}>Game</a></li>
+                <li><a className="menulink" onClick={this.onClickControlMenu.bind(this)}>Controls</a></li>
+            </ul>
+
+
             <div className="minesweeper" style={{width: gameWidth}}>
+
+
+
                 <div className="minesweeper minesweeper-indent minesweeper-header">
                     <Counter value={this.state.bombsRemaining} />
                     <FaceButton
@@ -310,6 +393,7 @@ class App extends React.Component {
                         onRightClick={this.onRightClick.bind(this)}
                     />
                 </div>
+            </div>
             </div>
         );
     }
