@@ -183,6 +183,10 @@ li {
     background-position: -117px -32px;
 }
 
+.digit.digit-minus {
+    background-position: -130px -32px;
+}
+
 .face-button {
     display: flex;
     width: 26px;
