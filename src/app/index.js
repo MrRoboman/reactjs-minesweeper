@@ -65,6 +65,7 @@ class App extends React.Component {
                 }
             }
         };
+        window.addEventListener('mouseup', this.onMouseUp.bind(this));
         this.state = {
             difficulty: "test"
         };
@@ -134,6 +135,8 @@ class App extends React.Component {
             this.flagAllBombs(tiles);
             bombsRemaining = 0;
             faceFrame = this.faceFrames.SHADES;
+        } else if (this.gameover) {
+            faceFrame = this.faceFrames.FROWN;
         }
 
         this.setState({
@@ -340,6 +343,45 @@ class App extends React.Component {
         });
     }
 
+    onMouseDownBoard(event) {
+        if (this.gameover || event.button !== 0) {
+            return;
+        }
+        this.setState({
+            faceFrame: this.faceFrames.OFACE
+        });
+    }
+
+    onMouseUpBoard(event) {
+        if (this.gameover || event.button !== 0) {
+            return;
+        }
+
+    }
+
+    onMouseDownFace(event) {
+        if (event.button === 0) {
+            this.setState({
+                faceFrame: this.faceFrames.SMILE_CLICKED
+            });
+        }
+    }
+
+    onMouseUpFace(event) {
+        if (event.button === 0 && this.state.faceFrame === this.faceFrames.SMILE_CLICKED) {
+            this.reset();
+        }
+    }
+
+    onMouseUp() {
+        if (this.gameover) {
+            return;
+        }
+        this.setState({
+            faceFrame: this.faceFrames.SMILE
+        });
+    }
+
     render() {
         if (!this.state.tiles) {
             return <div>Loading...</div>;
@@ -379,7 +421,8 @@ class App extends React.Component {
                     <Counter value={this.state.bombsRemaining} />
                     <FaceButton
                         tileFrame={this.state.faceFrame}
-                        onClick={this.reset.bind(this)}
+                        onMouseDown={this.onMouseDownFace.bind(this)}
+                        onMouseUp={this.onMouseUpFace.bind(this)}
                          />
                     <Counter value={this.state.secondsElapsed} />
                 </div>
@@ -391,6 +434,8 @@ class App extends React.Component {
                         tiles={this.state.tiles}
                         onLeftClick={this.onLeftClick.bind(this)}
                         onRightClick={this.onRightClick.bind(this)}
+                        onMouseDown={this.onMouseDownBoard.bind(this)}
+
                     />
                 </div>
             </div>

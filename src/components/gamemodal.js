@@ -19,7 +19,6 @@ class GameModal extends React.Component {
     }
 
     componentWillReceiveProps(newProps) {
-        console.log("update game modal");
         this.setState({
             difficulty: newProps.difficulty,
             boardSettings: newProps.boardSettings

@@ -7,6 +7,8 @@ export default function FaceButton(props) {
         <div
             className={className}
             onClick={props.onClick}
+            onMouseDown={props.onMouseDown}
+            onMouseUp={props.onMouseUp}
         />
     ) ;
 }

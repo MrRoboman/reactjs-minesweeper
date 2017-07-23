@@ -22,7 +22,9 @@ export default function Board(props) {
             style={{
                 width,
                 height
-            }}>
+            }}
+            onMouseDown={props.onMouseDown}
+            >
 
             {tiles}
 

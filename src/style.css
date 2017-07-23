@@ -2,6 +2,10 @@
     font-family: Verdana, sans-serif;
 }
 
+html {
+    cursor: default;
+}
+
 body {
     display: flex;
     justify-content: center;
