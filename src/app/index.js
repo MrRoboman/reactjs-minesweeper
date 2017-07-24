@@ -198,7 +198,7 @@ class App extends React.Component {
         const tiles = _.cloneDeep(this.state.tiles);
         let { bombsRemaining, faceFrame } = this.state;
 
-        if (tiles[index].isBomb) {
+        if (tiles[index].isBomb && !tiles[index].isFlagged) {
             this.gameover = true;
             this.stopTimer();
             this.revealBombs(tiles);
@@ -228,19 +228,23 @@ class App extends React.Component {
             return;
         }
 
-        const tiles = this.flagTile(index, _.cloneDeep(this.state.tiles));
+        if (this.state.tiles[index].isHidden) {
+            const tiles = _.cloneDeep(this.state.tiles);
+            const tile = tiles[index];
+            let { bombsRemaining } = this.state;
 
-        let { bombsRemaining } = this.state;
-        if (tiles[index].isFlagged) {
-            bombsRemaining--;
-        } else {
-            bombsRemaining++;
+            tile.isFlagged = !tile.isFlagged;
+            if (tile.isFlagged) {
+                bombsRemaining--;
+            } else {
+                bombsRemaining++;
+            }
+
+            this.setState({
+                bombsRemaining,
+                tiles
+            });
         }
-
-        this.setState({
-            bombsRemaining,
-            tiles
-        });
     }
 
     playerWon(tiles) {
