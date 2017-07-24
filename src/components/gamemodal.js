@@ -1,16 +1,9 @@
 import React from 'react';
 import Modal from 'react-modal';
 
-class GameModal extends React.Component {
-    // constructor() {
-    //     super();
-    //
-    //     this.state = {
-    //         difficulty: "Loading",
-    //         boardSettings:
-    //     };
-    // }
+const _ = require('lodash');
 
+class GameModal extends React.Component {
     componentDidMount() {
         this.setState({
             difficulty: this.props.difficulty,
@@ -39,14 +32,9 @@ class GameModal extends React.Component {
             value = parseInt(value);
         }
         if (value || value === "") {
-            const boardSettings = Object.assign({}, this.state.boardSettings);
-            if (index === 0) {
-                boardSettings.difficulties.custom.rows = value;
-            } else if (index === 1) {
-                boardSettings.difficulties.custom.columns = value;
-            } else if (index === 2) {
-                boardSettings.difficulties.custom.totalBombs = value;
-            }
+            const boardSettings = _.cloneDeep(this.state.boardSettings);
+            const name = event.target.name;
+            boardSettings.difficulties.custom[name] = value;
             this.setState({boardSettings});
         }
     }
@@ -59,51 +47,60 @@ class GameModal extends React.Component {
     }
 
     onBlurCustomValue(index, event) {
-        const boardSettings = Object.assign({}, this.state.boardSettings);
+        const boardSettings = _.cloneDeep(this.state.boardSettings);
         const { rows, columns } = boardSettings.difficulties.custom;
         const maxBombs = rows * columns - 1;
+        const name = event.target.name;
         let value = event.target.value;
-        value = value || 1;
-        if (index === 0) {
-            value = Math.min(value, boardSettings.maxRows);
-            value = Math.max(value, boardSettings.minRows);
+        value = value ? value : 1;
+        if (name === "rows") {
+            value = _.clamp(value, boardSettings.minRows, boardSettings.maxRows);
             boardSettings.difficulties.custom.rows = value;
-        } else if (index === 1) {
-            value = Math.min(value, boardSettings.maxColumns);
-            value = Math.max(value, boardSettings.minColumns);
+        } else if (name === "columns") {
+            value = _.clamp(value, boardSettings.minColumns, boardSettings.maxColumns);
             boardSettings.difficulties.custom.columns = value;
-        } else if (index === 2) {
-            value = Math.min(value, maxBombs);
-            value = Math.max(value, boardSettings.minBombs);
+        } else if (name === "totalBombs") {
+            value = _.clamp(value, boardSettings.minBombs, maxBombs);
             boardSettings.difficulties.custom.totalBombs = value;
         }
         this.setState({boardSettings});
     }
 
-    renderRows() {
-        if (!this.state) {
-            return <tr><td>Loading...</td></tr>;
-        }
-        const difficulties = Object.keys(this.state.boardSettings.difficulties);
-        const rows = difficulties.map((difficulty, index) => {
-            const { rows, columns, totalBombs } = this.state.boardSettings.difficulties[difficulty];
-            const values = [rows, columns, totalBombs].map((value, index) => {
+    renderColumns(boardSettingDifficulty, difficulty) {
+        const { rows, columns, totalBombs } = boardSettingDifficulty[difficulty];
+        const boardSettingValues = [rows, columns, totalBombs].map((value, index) => {
+            let name;
+            if (index === 0) {
+                name = "rows";
+            } else if (index === 1) {
+                name = "columns";
+            } else {
+                name = "totalBombs";
+            }
+            if (difficulty === "custom") {
+                return (
+                    <td key={index}>
+                        <input type="text"
+                               name={name}
+                               value={value}
+                               onChange={this.onChangeCustomValue.bind(this, index)}
+                               onFocus={this.onFocusCustomValue.bind(this)}
+                               onBlur={this.onBlurCustomValue.bind(this, index)}
+                        />
+                    </td>
+                );
+            } else {
+                return <td key={index}>{value}</td>;
+            }
+        });
 
-                if (difficulty === "custom") {
-                    return (
-                        <td key={index}>
-                            <input type="text"
-                                   value={value}
-                                   onChange={this.onChangeCustomValue.bind(this, index)}
-                                   onFocus={this.onFocusCustomValue.bind(this)}
-                                   onBlur={this.onBlurCustomValue.bind(this, index)}
-                            />
-                        </td>
-                    );
-                } else {
-                    return <td key={index}>{value}</td>;
-                }
-            });
+        return boardSettingValues;
+    }
+
+    renderRows() {
+        const difficulties = _.keys(this.state.boardSettings.difficulties);
+        const rows = difficulties.map((difficulty, index) => {
+            const columns = this.renderColumns(this.state.boardSettings.difficulties, difficulty);
             const isChecked = (difficulty === this.state.difficulty);
             const capitalizedDifficulty = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
             return (
@@ -118,51 +115,46 @@ class GameModal extends React.Component {
                             {capitalizedDifficulty}
                     </label>
                     </td>
-                    {values}
+                    {columns}
                 </tr>
             );
         });
 
         return rows;
     }
-    // style={{
-    //     content: {
-    //         width: 520,
-    //         height: 250
-    //     }
-    // }}
+
     render() {
         if (!this.state) {
             return <div>Loading...</div>;
         }
         return (
-                <Modal
+            <Modal
                 className="modal"
-                  isOpen={this.props.isOpen}
-                  contentLabel="Modal"
-                  onRequestClose={this.props.onRequestClose}
+                isOpen={this.props.isOpen}
+                contentLabel="Modal"
+                onRequestClose={this.props.onRequestClose}
                 >
                 <div className="modal-content">
-                  <h3>Game</h3>
-                  <table>
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Rows</th>
-                            <th>Columns</th>
-                            <th>Bombs</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.renderRows()}
-                    </tbody>
-                  </table>
-                  <div className="modal-buttons">
-                    <button onClick={this.props.onClickCancel}>Cancel</button>
-                    <button onClick={() => this.props.onClickOk(this.state)}>New Game</button>
-                  </div>
-                  </div>
-                </Modal>
+                    <h3>Game</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Rows</th>
+                                <th>Columns</th>
+                                <th>Bombs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {this.renderRows()}
+                        </tbody>
+                    </table>
+                    <div className="modal-buttons">
+                        <button onClick={this.props.onClickCancel}>Cancel</button>
+                        <button onClick={() => this.props.onClickOk(this.state)}>New Game</button>
+                    </div>
+                </div>
+            </Modal>
         );
     }
 }

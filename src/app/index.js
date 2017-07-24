@@ -246,7 +246,7 @@ class App extends React.Component {
     playerWon(tiles) {
         for (let i = 0; i < tiles.length; i++) {
             const tile = tiles[i];
-            if(tile.isHidden && !tile.isBomb) {
+            if (tile.isHidden && !tile.isBomb) {
                 return false;
             }
         }
@@ -262,7 +262,9 @@ class App extends React.Component {
     }
 
     flagTile(index, tiles) {
-        tiles[index].isFlagged = !tiles[index].isFlagged;
+        if (tiles[index].isHidden) {
+            tiles[index].isFlagged = !tiles[index].isFlagged;
+        }
 
         return tiles;
     }
@@ -355,11 +357,12 @@ class App extends React.Component {
                     onRequestClose={this.closeControlModal.bind(this)}
                     />
 
+                <h1>Bombsweeper!</h1>
+
                 <ul>
                     <li><a className="menulink" onClick={this.onClickGameMenu.bind(this)}>Game</a></li>
                     <li><a className="menulink" onClick={this.onClickControlMenu.bind(this)}>Controls</a></li>
                 </ul>
-
 
                 <div className="minesweeper" style={{width: gameWidth}}>
                     <div className="minesweeper minesweeper-indent minesweeper-header">

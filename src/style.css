@@ -11,6 +11,10 @@ body {
     justify-content: center;
 }
 
+h1 {
+    margin-bottom: 0;
+}
+
 ul {
     margin: 0;
     padding: 4px;
@@ -32,7 +36,7 @@ li {
     background-color: rgba(220,220,220,0.7);
     display: block;
     margin: auto;
-    margin-top: 20px;
+    margin-top: 70px;
     border: 2px solid #ccc;
     padding: 14px;
     border-radius: 5px;
@@ -65,11 +69,6 @@ li {
 .modal-content table thead tr th {
     text-align: right;
 }
-
-/*.modal-content table tbody tr td label {
-    display: block;
-    width: 100px;
-}*/
 
 .modal-content table tbody tr td input {
     display: block;
@@ -105,7 +104,8 @@ li {
     padding: 0;
     border-right: 2px solid #999;
     border-bottom: 2px solid #999;
-    margin-top: 20px;
+    margin: auto;
+    margin-top: 40px;
 }
 
 .minesweeper.minesweeper-indent {

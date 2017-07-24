@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Tile(props) {
+function Tile(props) {
 
     let className = "tile ";
     if (props.isHidden) {
@@ -11,8 +11,12 @@ export default function Tile(props) {
         }
     } else if (props.isDetonated) {
         className += "detonated";
-    } else if(props.isBomb) {
-        className += "bomb";
+    } else if (props.isBomb) {
+        if (props.isFlagged) {
+            className += "flagged";
+        } else {
+            className += "bomb";
+        }
     } else if (props.isFlagged) {
         className += "bomb_x";
     } else {
@@ -27,3 +31,5 @@ export default function Tile(props) {
                     props.onRightClick(props.index);
                 }} />;
 }
+
+export default Tile;

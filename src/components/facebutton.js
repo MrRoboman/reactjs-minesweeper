@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function FaceButton(props) {
+function FaceButton(props) {
     const className = `face-button ${props.tileFrame}`;
 
     return (
@@ -12,3 +12,5 @@ export default function FaceButton(props) {
         />
     ) ;
 }
+
+export default FaceButton;
