@@ -257,7 +257,7 @@ li {
     background-position: -128px 0;
 }
 
-.tile.revealed-bomb {
+.tile.bomb {
     background-position: 0 -16px;
 }
 

@@ -2,14 +2,21 @@ import React from 'react';
 
 export default function Tile(props) {
 
-    let className = `tile ${props.tileFrame}`;
-    if(props.tileFrame === "revealed") {
-        if(props.isBomb) {
-            className += "-bomb";
+    let className = "tile ";
+    if (props.isHidden) {
+        if (props.isFlagged) {
+            className += "flagged";
+        } else {
+            className += "hidden";
         }
-        else {
-            className += `-${props.adjacentBombCount}`;
-        }
+    } else if (props.isDetonated) {
+        className += "detonated";
+    } else if(props.isBomb) {
+        className += "bomb";
+    } else if (props.isFlagged) {
+        className += "bomb_x";
+    } else {
+        className += "revealed-" + props.adjacentBombCount;
     }
 
     return <div

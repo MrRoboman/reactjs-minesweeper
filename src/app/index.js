@@ -14,15 +14,6 @@ class App extends React.Component {
     constructor() {
         super();
 
-        this.tileFrames = {
-            BOMB_X: 'bomb_x',
-            DETONATED: 'detonated',
-            FLAGGED: 'flagged',
-            HIDDEN: 'hidden',
-            QUESTION_MARK: 'question_mark',
-            REVEALED: 'revealed'
-        };
-
         this.faceFrames = {
             SMILE_CLICKED: 'smile-clicked',
             SMILE: 'smile',
@@ -97,7 +88,9 @@ class App extends React.Component {
         const tiles = [];
         for(let i = 0; i < tileCount; i++) {
             tiles.push({
-                tileFrame: this.tileFrames.HIDDEN,
+                isHidden: true,
+                isFlagged: false,
+                isDetonated: false,
                 isBomb: (i < totalBombs),
                 adjacentBombCount: 0
             });
@@ -173,8 +166,8 @@ class App extends React.Component {
 
     revealTiles(index, tiles, boardSettings) {
         const tile = tiles[index];
-        if (tile.tileFrame === this.tileFrames.HIDDEN && !tile.isBomb) {
-            tile.tileFrame = this.tileFrames.REVEALED;
+        if (tile.isHidden && !tile.isFlagged) {
+            tile.isHidden = false;
             if (tile.adjacentBombCount === 0) {
                 this.getAdjacentTileIndices(index, boardSettings).forEach(adjacentTileIndex => {
                     this.revealTiles(adjacentTileIndex, tiles, boardSettings);
@@ -186,12 +179,8 @@ class App extends React.Component {
 
     revealBombs(tiles) {
         tiles.forEach(tile => {
-            if (tile.isBomb) {
-                if (tile.tileFrame !== this.tileFrames.FLAGGED) {
-                    tile.tileFrame = this.tileFrames.REVEALED;
-                }
-            } else if (tile.tileFrame === this.tileFrames.FLAGGED) {
-                tile.tileFrame = this.tileFrames.BOMB_X;
+            if (tile.isBomb || tile.isFlagged) {
+                tile.isHidden = false;
             }
         });
 
@@ -213,7 +202,7 @@ class App extends React.Component {
             this.gameover = true;
             this.stopTimer();
             this.revealBombs(tiles);
-            tiles[index].tileFrame = this.tileFrames.DETONATED;
+            tiles[index].isDetonated = true;
             faceFrame = this.faceFrames.FROWN;
         } else {
             this.revealTiles(index, tiles, boardSettings);
@@ -242,10 +231,10 @@ class App extends React.Component {
         const tiles = this.flagTile(index, _.cloneDeep(this.state.tiles));
 
         let { bombsRemaining } = this.state;
-        if (tiles[index].tileFrame === this.tileFrames.HIDDEN) {
-            bombsRemaining++;
-        } else {
+        if (tiles[index].isFlagged) {
             bombsRemaining--;
+        } else {
+            bombsRemaining++;
         }
 
         this.setState({
@@ -257,7 +246,7 @@ class App extends React.Component {
     playerWon(tiles) {
         for (let i = 0; i < tiles.length; i++) {
             const tile = tiles[i];
-            if(tile.tileFrame !== this.tileFrames.REVEALED && !tile.isBomb) {
+            if(tile.isHidden && !tile.isBomb) {
                 return false;
             }
         }
@@ -267,23 +256,13 @@ class App extends React.Component {
     flagAllBombs(tiles) {
         tiles.forEach(tile => {
             if (tile.isBomb) {
-                tile.tileFrame = this.tileFrames.FLAGGED;
+                tile.isFlagged = true;
             }
         });
     }
 
     flagTile(index, tiles) {
-        const markFrames = [
-            this.tileFrames.HIDDEN,
-            this.tileFrames.FLAGGED,
-        ];
-
-        const tile = tiles[index];
-        const currentMark = markFrames.indexOf(tile.tileFrame);
-        if (currentMark > -1) {
-            const nextMark = markFrames[(currentMark + 1) % markFrames.length];
-            tile.tileFrame = nextMark;
-        }
+        tiles[index].isFlagged = !tiles[index].isFlagged;
 
         return tiles;
     }
