@@ -3,6 +3,8 @@ import Modal from 'react-modal';
 
 const _ = require('lodash');
 
+// Note: This component may be broken down into smaller components.
+
 class GameModal extends React.Component {
     componentDidMount() {
         this.setState({
